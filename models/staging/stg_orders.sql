@@ -1,3 +1,4 @@
+--subtotal
 with
 
 source as (

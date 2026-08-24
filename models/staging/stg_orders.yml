@@ -11,3 +11,39 @@ models:
         data_tests:
           - not_null
           - unique
+      - name: location_id
+        description: Foreign key to the store location where the order was placed.
+        data_tests:
+          - not_null
+      - name: customer_id
+        description: Foreign key to the customer who placed the order.
+        data_tests:
+          - not_null
+      - name: subtotal_cents
+        description: The order subtotal, before tax, expressed in cents.
+        data_tests:
+          - not_null
+      - name: tax_paid_cents
+        description: The amount of tax paid on the order, expressed in cents.
+        data_tests:
+          - not_null
+      - name: order_total_cents
+        description: The total order amount including tax, expressed in cents.
+        data_tests:
+          - not_null
+      - name: subtotal
+        description: The order subtotal, before tax, expressed in dollars.
+        data_tests:
+          - not_null
+      - name: tax_paid
+        description: The amount of tax paid on the order, expressed in dollars.
+        data_tests:
+          - not_null
+      - name: order_total
+        description: The total order amount including tax, expressed in dollars.
+        data_tests:
+          - not_null
+      - name: ordered_at
+        description: The date the order was placed, truncated to the day.
+        data_tests:
+          - not_null
