@@ -67,6 +67,19 @@ semantic_models:
         type: categorical
       - name: is_drink_item
         type: categorical
+      - name: is_previous_day
+        description: Whether the order item was ordered on the calendar day before the current date.
+        type: categorical
+        expr: cast(ordered_at as date) = dateadd(day, -1, current_date)
+      - name: is_previous_month_to_date
+        description: Whether the order item was ordered during the equivalent elapsed portion of the previous month.
+        type: categorical
+        expr: cast(ordered_at as date) between dateadd(month, -1, date_trunc(month, current_date)) and dateadd(month, -1, current_date)
+      - name: is_previous_week_to_date
+        description: Whether the order item was ordered during the equivalent elapsed portion of the previous week.
+        type: categorical
+        expr: cast(ordered_at as date) between dateadd(week, -1, date_trunc(week, current_date)) and dateadd(week, -1, current_date)
+
     measures:
       - name: revenue
         description: The revenue generated for each order item. Revenue is calculated as a sum of revenue associated with each product in an order.
