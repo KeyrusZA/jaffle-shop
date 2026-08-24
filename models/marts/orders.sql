@@ -12,6 +12,12 @@ order_items as (
 
 ),
 
+demo_location_regions as (
+
+    select * from {{ ref('demo_location_regions') }}
+
+),
+
 order_items_summary as (
 
     select
@@ -50,13 +56,33 @@ compute_booleans as (
         order_items_summary.count_drink_items,
         order_items_summary.count_order_items,
         order_items_summary.count_food_items > 0 as is_food_order,
-        order_items_summary.count_drink_items > 0 as is_drink_order
+        order_items_summary.count_drink_items > 0 as is_drink_order,
+        dateadd(day, mod(abs(hash(orders.order_id)), 4) + 1, orders.ordered_at) as shipped_at,
+        case
+            when order_items_summary.count_food_items > 0
+                and order_items_summary.count_drink_items > 0 then 'Food & Beverage'
+            when order_items_summary.count_food_items > 0 then 'Food'
+            when order_items_summary.count_drink_items > 0 then 'Beverage'
+            else 'Other'
+        end as category,
+        case
+            when order_items_summary.count_food_items > 0
+                and order_items_summary.count_drink_items > 0 then 'Mixed Order'
+            when order_items_summary.count_food_items > 0 then 'Jaffles'
+            when order_items_summary.count_drink_items > 0 then 'Drinks'
+            else 'Other'
+        end as sub_category,
+        coalesce(demo_location_regions.region, 'Unknown') as region
 
     from orders
 
     left join
         order_items_summary
         on orders.order_id = order_items_summary.order_id
+
+    left join
+        demo_location_regions
+        on orders.location_id = demo_location_regions.location_id
 
 ),
 

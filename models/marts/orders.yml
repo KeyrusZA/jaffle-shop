@@ -1,6 +1,6 @@
 models:
   - name: orders
-    description: Order overview data mart, offering key details for each order inlcluding if it's a customer's first order and a food vs. drink item breakdown. One row per order.
+    description: "Order overview data mart, offering key details for each order inlcluding if it's a customer's first order and a food vs. drink item breakdown. One row per order. Order fact table. This table is at the order grain with one row per order.\n"
     data_tests:
       - dbt_utils.expression_is_true:
           arguments:
@@ -14,6 +14,8 @@ models:
         data_tests:
           - not_null
           - unique
+        entity:
+          type: primary
       - name: customer_id
         description: The foreign key relating to the customer who placed the order.
         data_tests:
@@ -21,17 +23,275 @@ models:
               arguments:
                 to: ref('stg_customers')
                 field: customer_id
+        entity:
+          type: foreign
+          name: customer
       - name: order_total
         description: The total amount of the order in USD including tax.
+        dimension:
+          type: categorical
+          name: order_total_dim
       - name: ordered_at
         description: The timestamp the order was placed at.
+        dimension:
+          type: time
+        granularity: day
       - name: order_cost
         description: The sum of supply expenses to fulfill the order.
       - name: is_food_order
         description: A boolean indicating if this order included any food items.
+        dimension:
+          type: categorical
       - name: is_drink_order
         description: A boolean indicating if this order included any drink items.
 
+        dimension:
+          type: categorical
+      - name: location_id
+        entity:
+          type: foreign
+          name: location
+      - name: customer_order_number
+        dimension:
+          type: categorical
+      - name: shipped_at
+        description: Demo ship date, deterministically assigned one to four days after the order date.
+        dimension:
+          type: time
+        granularity: day
+      - name: category
+        description: Demo Tableau-style category derived from the food and drink mix in an order.
+        dimension:
+          type: categorical
+      - name: sub_category
+        description: Demo Tableau-style sub-category derived from the food and drink mix in an order.
+        dimension:
+          type: categorical
+      - name: region
+        description: Demo Tableau-style region mapped from the order location.
+        dimension:
+          type: categorical
+    semantic_model:
+
+      enabled: true
+    agg_time_dimension: ordered_at
+    metrics:
+      - name: order_cost
+        description: Sum of cost for each order item.
+        label: Order Cost
+        type: simple
+        agg: sum
+      - name: order_total
+        description: Sum of total order amonunt. Includes tax + revenue.
+        type: simple
+        label: Order Total
+        agg: sum
+      - name: sales
+        description: Sum of order subtotal before tax, expressed in USD.
+        label: Sales
+        type: simple
+        agg: sum
+        expr: subtotal
+      - name: sales_zar
+        description: Sum of order subtotal converted to ZAR at the temporary fixed rate of 18.72 ZAR per USD. Replace the fixed rate with a governed exchange-rate source before production use.
+        label: Sales (ZAR)
+        type: simple
+        agg: sum
+        expr: subtotal * 18.72
+      - name: profit
+        description: Sales before tax less order supply cost.
+        label: Profit
+        type: derived
+        expr: sales - cost
+        input_metrics:
+          - name: sales
+          - name: order_cost
+            alias: cost
+      - name: sales_variance_day
+        description: Sales variance versus the prior day.
+        label: Sales Variance (Day)
+        type: derived
+        expr: sales - previous_sales
+        input_metrics:
+          - name: sales
+          - name: sales
+            alias: previous_sales
+            offset_window: 1 day
+      - name: sales_variance_pct_day
+        description: Sales variance versus the prior day as a percentage of current-day sales. Returns null when current-day sales are zero.
+        label: Sales Variance % (Day)
+        type: derived
+        expr: (sales - previous_sales) / nullif(sales, 0)
+        input_metrics:
+          - name: sales
+          - name: sales
+            alias: previous_sales
+            offset_window: 1 day
+      - name: sales_variance_week
+        description: Sales variance versus the prior week.
+        label: Sales Variance (Week)
+        type: derived
+        expr: sales - previous_sales
+        input_metrics:
+          - name: sales
+          - name: sales
+            alias: previous_sales
+            offset_window: 1 week
+      - name: sales_variance_pct_week
+        description: Sales variance versus the prior week as a percentage of current-week sales. Returns null when current-week sales are zero.
+        label: Sales Variance % (Week)
+        type: derived
+        expr: (sales - previous_sales) / nullif(sales, 0)
+        input_metrics:
+          - name: sales
+          - name: sales
+            alias: previous_sales
+            offset_window: 1 week
+      - name: sales_variance_month
+        description: Sales variance versus the prior month.
+        label: Sales Variance (Month)
+        type: derived
+        expr: sales - previous_sales
+        input_metrics:
+          - name: sales
+          - name: sales
+            alias: previous_sales
+            offset_window: 1 month
+      - name: sales_variance_pct_month
+        description: Sales variance versus the prior month as a percentage of current-month sales. Returns null when current-month sales are zero.
+        label: Sales Variance % (Month)
+        type: derived
+        expr: (sales - previous_sales) / nullif(sales, 0)
+        input_metrics:
+          - name: sales
+          - name: sales
+            alias: previous_sales
+            offset_window: 1 month
+      - name: sales_variance_quarter
+        description: Sales variance versus the prior quarter.
+        label: Sales Variance (Quarter)
+        type: derived
+        expr: sales - previous_sales
+        input_metrics:
+          - name: sales
+          - name: sales
+            alias: previous_sales
+            offset_window: 1 quarter
+      - name: sales_variance_pct_quarter
+        description: Sales variance versus the prior quarter as a percentage of current-quarter sales. Returns null when current-quarter sales are zero.
+        label: Sales Variance % (Quarter)
+        type: derived
+        expr: (sales - previous_sales) / nullif(sales, 0)
+        input_metrics:
+          - name: sales
+          - name: sales
+            alias: previous_sales
+            offset_window: 1 quarter
+      - name: sales_variance_year
+        description: Sales variance versus the prior year.
+        label: Sales Variance (Year)
+        type: derived
+        expr: sales - previous_sales
+        input_metrics:
+          - name: sales
+          - name: sales
+            alias: previous_sales
+            offset_window: 1 year
+      - name: sales_variance_pct_year
+        description: Sales variance versus the prior year as a percentage of current-year sales. Returns null when current-year sales are zero.
+        label: Sales Variance % (Year)
+        type: derived
+        expr: (sales - previous_sales) / nullif(sales, 0)
+        input_metrics:
+          - name: sales
+          - name: sales
+            alias: previous_sales
+            offset_window: 1 year
+      - name: profit_variance_month
+        description: Profit variance versus the prior month.
+        label: Profit Variance (Month)
+        type: derived
+        expr: profit - previous_profit
+        input_metrics:
+          - name: profit
+          - name: profit
+            alias: previous_profit
+            offset_window: 1 month
+      - name: profit_variance_pct_month
+        description: Profit variance versus the prior month as a percentage of current-month profit. Returns null when current-month profit is zero.
+        label: Profit Variance % (Month)
+        type: derived
+        expr: (profit - previous_profit) / nullif(profit, 0)
+        input_metrics:
+          - name: profit
+          - name: profit
+            alias: previous_profit
+            offset_window: 1 month
+      - name: sales_zar_variance_month
+        description: Sales in ZAR variance versus the prior month.
+        label: Sales (ZAR) Variance (Month)
+        type: derived
+        expr: sales_zar - previous_sales_zar
+        input_metrics:
+          - name: sales_zar
+          - name: sales_zar
+            alias: previous_sales_zar
+            offset_window: 1 month
+      - name: sales_zar_variance_pct_month
+        description: Sales in ZAR variance versus the prior month as a percentage of current-month sales in ZAR. Returns null when current-month sales in ZAR are zero.
+        label: Sales (ZAR) Variance % (Month)
+        type: derived
+        expr: (sales_zar - previous_sales_zar) / nullif(sales_zar, 0)
+        input_metrics:
+          - name: sales_zar
+          - name: sales_zar
+            alias: previous_sales_zar
+            offset_window: 1 month
+
+      - name: new_customer_orders
+        description: New customer's first order count
+        label: New Customers
+        type: simple
+        filter: |
+          {{ Dimension('order_id__customer_order_number') }} = 1
+        agg: sum
+        expr: 1
+      - name: large_orders
+        description: "Count of orders with order total over 20."
+        type: simple
+        label: Large Orders
+        filter: |
+          {{ Dimension('order_id__order_total_dim') }} >= 20
+        agg: sum
+        expr: 1
+      - name: orders
+        description: Count of orders.
+        label: Orders
+        type: simple
+        agg: sum
+        expr: 1
+      - name: food_orders
+        description: Count of orders that contain food order items
+        label: Food Orders
+        type: simple
+        filter: |
+          {{ Dimension('order_id__is_food_order') }} = true
+        agg: sum
+        expr: 1
+      - name: drink_orders
+        description: Count of orders that contain drink order items
+        label: Drink Orders
+        type: simple
+        filter: |
+          {{ Dimension('order_id__is_drink_order') }} = true
+
+        agg: sum
+        expr: 1
+      - name: tax_paid
+        description: The total tax paid on each order.
+        agg: sum
+        type: simple
+        hidden: true
 unit_tests:
   - name: test_order_items_compute_to_bools_correctly
     description: "Test that the counts of drinks and food orders convert to booleans properly."
@@ -44,103 +304,16 @@ unit_tests:
           - {order_id: 2, order_item_id: 3, is_drink_item: false, is_food_item: true}
       - input: ref('stg_orders')
         rows:
-          - {order_id: 1}
-          - {order_id: 2}
+          - {order_id: 1, location_id: demo_location, ordered_at: '2024-01-01'}
+          - {order_id: 2, location_id: demo_location, ordered_at: '2024-01-01'}
+      - input: ref('demo_location_regions')
+        rows:
+          - {location_id: demo_location, region: Demo Region}
     expect:
+
       rows:
         - {order_id: 1, count_food_items: 1, count_drink_items: 1, is_drink_order: true, is_food_order: true}
         - {order_id: 2, count_food_items: 1, count_drink_items: 0, is_drink_order: false, is_food_order: true}
-
-semantic_models:
-  - name: orders
-    defaults:
-      agg_time_dimension: ordered_at
-    description: |
-      Order fact table. This table is at the order grain with one row per order.
-    model: ref('orders')
-    entities:
-      - name: order_id
-        type: primary
-      - name: location
-        type: foreign
-        expr: location_id
-      - name: customer
-        type: foreign
-        expr: customer_id
-    dimensions:
-      - name: ordered_at
-        expr: ordered_at
-        type: time
-        type_params:
-          time_granularity: day
-      - name: order_total_dim
-        type: categorical
-        expr: order_total
-      - name: is_food_order
-        type: categorical
-      - name: is_drink_order
-        type: categorical
-      - name: customer_order_number
-        type: categorical
-    measures:
-      - name: order_total
-        description: The total amount for each order including taxes.
-        agg: sum
-      - name: order_count
-        expr: 1
-        agg: sum
-      - name: tax_paid
-        description: The total tax paid on each order.
-        agg: sum
-      - name: order_cost
-        description: The cost for each order item. Cost is calculated as a sum of the supply cost for each order item.
-        agg: sum
-
-metrics:
-  - name: order_total
-    description: Sum of total order amonunt. Includes tax + revenue.
-    type: simple
-    label: Order Total
-    type_params:
-      measure: order_total
-  - name: new_customer_orders
-    description: New customer's first order count
-    label: New Customers
-    type: simple
-    type_params:
-      measure: order_count
-    filter: |
-      {{ Dimension('order_id__customer_order_number') }} = 1
-  - name: large_orders
-    description: "Count of orders with order total over 20."
-    type: simple
-    label: Large Orders
-    type_params:
-      measure: order_count
-    filter: |
-      {{ Dimension('order_id__order_total_dim') }} >= 20
-  - name: orders
-    description: Count of orders.
-    label: Orders
-    type: simple
-    type_params:
-      measure: order_count
-  - name: food_orders
-    description: Count of orders that contain food order items
-    label: Food Orders
-    type: simple
-    type_params:
-      measure: order_count
-    filter: |
-      {{ Dimension('order_id__is_food_order') }} = true
-  - name: drink_orders
-    description: Count of orders that contain drink order items
-    label: Drink Orders
-    type: simple
-    type_params:
-      measure: order_count
-    filter: |
-      {{ Dimension('order_id__is_drink_order') }} = true
 
 saved_queries:
   - name: order_metrics
