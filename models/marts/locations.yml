@@ -4,27 +4,6 @@ models:
       enabled: true
     description: |
       Location dimension table. The grain of the table is one row per location.
-<<<<<<< HEAD
-    model: ref('locations')
-    defaults:
-      agg_time_dimension: opened_date
-    entities:
-      - name: location
-        description: Unique identifier for a Jaffle Shop location.
-        type: primary
-        expr: location_id
-    dimensions:
-      - name: location_name
-        description: Name of the Jaffle Shop location.
-        type: categorical
-      - name: opened_date
-        description: Date the Jaffle Shop location opened.
-        expr: opened_date
-        type: time
-        type_params:
-          time_granularity: day
-    measures:
-=======
     agg_time_dimension: opened_date
     columns:
       - name: location_id
@@ -39,7 +18,7 @@ models:
           type: time
         granularity: day
     metrics:
->>>>>>> 6883b86d55c3274f602433fceada7f022386b513
+
       - name: average_tax_rate
         description: Average tax rate.
         expr: tax_rate
