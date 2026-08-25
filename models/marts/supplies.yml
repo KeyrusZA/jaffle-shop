@@ -4,6 +4,33 @@ models:
       enabled: true
     description: |
       Supplies dimension table. The grain of the table is one row per supply and product combination.
+<<<<<<< HEAD
+    #The name of the dbt model and schema
+    model: ref('supplies')
+    #Entities. These usually corespond to keys in the table.
+    entities:
+      - name: supply
+        description: Unique identifier for a supply record.
+        type: primary
+        expr: supply_uuid
+    #Dimensions. Either categorical or time. These add additonal context to metrics. The typical querying pattern is Metric by Dimension.
+    dimensions:
+      - name: supply_id
+        description: Source identifier for the supply.
+        type: categorical
+      - name: product_id
+        description: Identifier of the product associated with the supply.
+        type: categorical
+      - name: supply_name
+        description: Name of the supply.
+        type: categorical
+      - name: supply_cost
+        description: Cost of the supply.
+        type: categorical
+      - name: is_perishable_supply
+        description: Indicates whether the supply is perishable.
+        type: categorical
+=======
     columns:
       - name: supply_uuid
         entity:
@@ -24,3 +51,4 @@ models:
       - name: is_perishable_supply
         dimension:
           type: categorical
+>>>>>>> 6883b86d55c3274f602433fceada7f022386b513

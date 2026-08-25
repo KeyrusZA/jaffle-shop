@@ -43,6 +43,38 @@ models:
               arguments:
                 values: ["new", "returning"]
 
+<<<<<<< HEAD
+semantic_models:
+  - name: customers
+    defaults:
+      agg_time_dimension: first_ordered_at
+    description: |
+      Customer grain mart.
+    model: ref('customers')
+    entities:
+      - name: customer
+        description: Unique identifier for a customer.
+        expr: customer_id
+        type: primary
+    dimensions:
+      - name: customer_name
+        description: Full name of the customer.
+        type: categorical
+      - name: customer_type
+        description: Customer classification based on whether they have placed more than one order.
+        type: categorical
+      - name: first_ordered_at
+        description: Timestamp of the customer's first order.
+        type: time
+        type_params:
+          time_granularity: day
+      - name: last_ordered_at
+        description: Timestamp of the customer's most recent order.
+        type: time
+        type_params:
+          time_granularity: day
+    measures:
+=======
         dimension:
           type: categorical
     semantic_model:
@@ -59,6 +91,7 @@ models:
         label: Count Lifetime Orders
         type: simple
         agg: sum
+>>>>>>> 6883b86d55c3274f602433fceada7f022386b513
       - name: customers
         description: Count of unique customers
         agg: count_distinct

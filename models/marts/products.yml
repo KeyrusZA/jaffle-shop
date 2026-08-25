@@ -4,6 +4,36 @@ models:
       enabled: true
     description: |
       Product dimension table. The grain of the table is one row per product.
+<<<<<<< HEAD
+    #The name of the dbt model and schema
+    model: ref('products')
+    #Entities. These usually corespond to keys in the table.
+    entities:
+      - name: product
+        description: Unique identifier for a product.
+        type: primary
+        expr: product_id
+    #Dimensions. Either categorical or time. These add additonal context to metrics. The typical querying pattern is Metric by Dimension.
+    dimensions:
+      - name: product_name
+        description: Name of the product.
+        type: categorical
+      - name: product_type
+        description: Category of the product.
+        type: categorical
+      - name: product_description
+        description: Detailed description of the product.
+        type: categorical
+      - name: is_food_item
+        description: Indicates whether the product is a food item.
+        type: categorical
+      - name: is_drink_item
+        description: Indicates whether the product is a drink item.
+        type: categorical
+      - name: product_price
+        description: Unit price of the product.
+        type: categorical
+=======
     columns:
       - name: product_id
         entity:
@@ -27,3 +57,4 @@ models:
       - name: product_price
         dimension:
           type: categorical
+>>>>>>> 6883b86d55c3274f602433fceada7f022386b513
