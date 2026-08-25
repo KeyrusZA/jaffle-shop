@@ -1,8 +1,10 @@
-semantic_models:
-  #The name of the semantic model.
+models:
   - name: supplies
+    semantic_model:
+      enabled: true
     description: |
       Supplies dimension table. The grain of the table is one row per supply and product combination.
+<<<<<<< HEAD
     #The name of the dbt model and schema
     model: ref('supplies')
     #Entities. These usually corespond to keys in the table.
@@ -28,3 +30,25 @@ semantic_models:
       - name: is_perishable_supply
         description: Indicates whether the supply is perishable.
         type: categorical
+=======
+    columns:
+      - name: supply_uuid
+        entity:
+          type: primary
+          name: supply
+      - name: supply_id
+        dimension:
+          type: categorical
+      - name: product_id
+        dimension:
+          type: categorical
+      - name: supply_name
+        dimension:
+          type: categorical
+      - name: supply_cost
+        dimension:
+          type: categorical
+      - name: is_perishable_supply
+        dimension:
+          type: categorical
+>>>>>>> 6883b86d55c3274f602433fceada7f022386b513
