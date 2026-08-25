@@ -8,17 +8,23 @@ semantic_models:
     #Entities. These usually corespond to keys in the table.
     entities:
       - name: supply
+        description: Unique identifier for a supply record.
         type: primary
         expr: supply_uuid
     #Dimensions. Either categorical or time. These add additonal context to metrics. The typical querying pattern is Metric by Dimension.
     dimensions:
       - name: supply_id
+        description: Source identifier for the supply.
         type: categorical
       - name: product_id
+        description: Identifier of the product associated with the supply.
         type: categorical
       - name: supply_name
+        description: Name of the supply.
         type: categorical
       - name: supply_cost
+        description: Cost of the supply.
         type: categorical
       - name: is_perishable_supply
+        description: Indicates whether the supply is perishable.
         type: categorical

@@ -49,23 +49,29 @@ semantic_models:
     model: ref('order_items')
     entities:
       - name: order_item
+        description: Unique identifier for an item within an order.
         type: primary
         expr: order_item_id
       - name: order_id
+        description: Identifier of the order containing the item.
         type: foreign
         expr: order_id
       - name: product
+        description: Identifier of the product purchased in the order item.
         type: foreign
         expr: product_id
     dimensions:
       - name: ordered_at
+        description: Timestamp when the order containing the item was placed.
         expr: ordered_at
         type: time
         type_params:
           time_granularity: day
       - name: is_food_item
+        description: Indicates whether the order item is a food product.
         type: categorical
       - name: is_drink_item
+        description: Indicates whether the order item is a drink product.
         type: categorical
     measures:
       - name: revenue

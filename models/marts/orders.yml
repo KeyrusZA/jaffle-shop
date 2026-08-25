@@ -60,33 +60,42 @@ semantic_models:
     model: ref('orders')
     entities:
       - name: order_id
+        description: Unique identifier for an order.
         type: primary
       - name: location
+        description: Identifier for the location that fulfilled the order.
         type: foreign
         expr: location_id
       - name: customer
+        description: Identifier for the customer who placed the order.
         type: foreign
         expr: customer_id
     dimensions:
       - name: ordered_at
+        description: Timestamp when the order was placed.
         expr: ordered_at
         type: time
         type_params:
           time_granularity: day
       - name: order_total_dim
+        description: Total order amount, including tax.
         type: categorical
         expr: order_total
       - name: is_food_order
+        description: Indicates whether the order contains at least one food item.
         type: categorical
       - name: is_drink_order
+        description: Indicates whether the order contains at least one drink item.
         type: categorical
       - name: customer_order_number
+        description: Sequential number of the order for the customer, ordered by purchase time.
         type: categorical
     measures:
       - name: order_total
         description: The total amount for each order including taxes.
         agg: sum
       - name: order_count
+        description: Count of orders.
         expr: 1
         agg: sum
       - name: tax_paid
