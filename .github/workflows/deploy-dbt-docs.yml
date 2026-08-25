@@ -31,6 +31,7 @@ jobs:
   build-docs:
     name: Generate dbt Docs
     runs-on: ubuntu-latest
+    environment: Production
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
