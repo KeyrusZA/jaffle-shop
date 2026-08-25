@@ -44,10 +44,17 @@ jobs:
         run: pip install "dbt-snowflake~=1.9.0"
 
       - name: Write Snowflake private key
+        env:
+          SNOWFLAKE_PRIVATE_KEY_B64: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_B64 }}
         run: |
           mkdir -p ~/.dbt
-          printf '%s\n' "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > "$SNOWFLAKE_PRIVATE_KEY_PATH"
+          echo "$SNOWFLAKE_PRIVATE_KEY_B64" | base64 -d > "$SNOWFLAKE_PRIVATE_KEY_PATH"
           chmod 600 "$SNOWFLAKE_PRIVATE_KEY_PATH"
+          # Sanity checks — prints only framing lines, never key material
+          head -1 "$SNOWFLAKE_PRIVATE_KEY_PATH"
+          tail -1 "$SNOWFLAKE_PRIVATE_KEY_PATH"
+          echo "Line count: $(wc -l < "$SNOWFLAKE_PRIVATE_KEY_PATH")"
+          openssl pkey -in "$SNOWFLAKE_PRIVATE_KEY_PATH" -passin env:SNOWFLAKE_PRIVATE_KEY_PASSPHRASE -noout && echo "Key parses and decrypts OK"
 
       - name: Create dbt profile
         run: |
