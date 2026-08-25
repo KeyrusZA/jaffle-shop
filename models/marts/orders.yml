@@ -16,7 +16,10 @@ models:
           - unique
         entity:
           type: primary
+          name: order
+
       - name: customer_id
+
         description: The foreign key relating to the customer who placed the order.
         data_tests:
           - relationships:
