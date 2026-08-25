@@ -1,0 +1,97 @@
+# .github/workflows/deploy-dbt-docs.yml
+name: Deploy dbt Docs
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+env:
+  SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+  SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+  SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+  SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+  SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+  SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+  SNOWFLAKE_PRIVATE_KEY_PATH: /home/runner/.dbt/snowflake_rsa_key.p8
+  # Only needed if your key is encrypted:
+  SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE }}
+
+jobs:
+  build-docs:
+    name: Generate dbt Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dbt Snowflake adapter
+        run: pip install "dbt-snowflake~=1.9.0"
+
+      - name: Write Snowflake private key
+        run: |
+          mkdir -p ~/.dbt
+          printf '%s\n' "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > "$SNOWFLAKE_PRIVATE_KEY_PATH"
+          chmod 600 "$SNOWFLAKE_PRIVATE_KEY_PATH"
+
+      - name: Create dbt profile
+        run: |
+          cat > ~/.dbt/profiles.yml <<'EOF'
+          default:   # must match the `profile:` key in dbt_project.yml
+            target: prod
+            outputs:
+              prod:
+                type: snowflake
+                account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+                user: "{{ env_var('SNOWFLAKE_USER') }}"
+                private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+                private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE', '') }}"
+                role: "{{ env_var('SNOWFLAKE_ROLE') }}"
+                warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE') }}"
+                database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
+                schema: "{{ env_var('SNOWFLAKE_SCHEMA') }}"
+                threads: 4
+          EOF
+
+      - name: Install dbt packages
+        run: dbt deps
+
+      - name: Generate documentation site
+        run: dbt docs generate --target-path site
+
+      - name: Assemble Pages payload
+        run: |
+          mkdir -p pages
+          cp site/index.html site/manifest.json site/catalog.json pages/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: pages
+
+  deploy-docs:
+    name: Deploy GitHub Pages
+    needs: build-docs
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
