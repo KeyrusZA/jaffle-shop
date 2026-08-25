@@ -52,11 +52,14 @@ jobs:
             exit 1
           fi
           mkdir -p ~/.dbt
-          # Diagnostic: first 8 chars only (safe — reveals framing, not key material).
-          # Expect "LS0tLS1C" (base64 of "-----B"). If you see "-----BEG", the raw PEM
-          # was pasted instead of the base64 blob.
-          echo "Secret starts with: $(printf '%s' "$SNOWFLAKE_PRIVATE_KEY_B64" | cut -c1-8)"
-          printf '%s' "$SNOWFLAKE_PRIVATE_KEY_B64" | tr -d '\r\n\t ' | base64 -d > "$SNOWFLAKE_PRIVATE_KEY_PATH"
+          # Diagnostic: true first 8 chars of the whole value (safe framing info only)
+          echo "Secret starts with: $(printf '%s' "$SNOWFLAKE_PRIVATE_KEY_B64" | head -c 8)"
+          # Accept either the raw PEM or a base64-encoded blob
+          if printf '%s' "$SNOWFLAKE_PRIVATE_KEY_B64" | head -c 5 | grep -q -- '-----'; then
+            printf '%s\n' "$SNOWFLAKE_PRIVATE_KEY_B64" | tr -d '\r' > "$SNOWFLAKE_PRIVATE_KEY_PATH"
+          else
+            printf '%s' "$SNOWFLAKE_PRIVATE_KEY_B64" | tr -d '\r\n\t ' | base64 -d > "$SNOWFLAKE_PRIVATE_KEY_PATH"
+          fi
           chmod 600 "$SNOWFLAKE_PRIVATE_KEY_PATH"
           # Sanity checks — prints only framing lines, never key material
           head -1 "$SNOWFLAKE_PRIVATE_KEY_PATH"
