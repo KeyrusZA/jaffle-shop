@@ -31,7 +31,6 @@ jobs:
   build-docs:
     name: Generate dbt Docs
     runs-on: ubuntu-latest
-    environment: Production
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -48,8 +47,16 @@ jobs:
         env:
           SNOWFLAKE_PRIVATE_KEY_B64: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_B64 }}
         run: |
+          if [ -z "$SNOWFLAKE_PRIVATE_KEY_B64" ]; then
+            echo "::error::SNOWFLAKE_PRIVATE_KEY_B64 secret is empty or not set — check name, type (Actions secret, not Variable), and location (repository secrets)"
+            exit 1
+          fi
           mkdir -p ~/.dbt
-          echo "$SNOWFLAKE_PRIVATE_KEY_B64" | base64 -d > "$SNOWFLAKE_PRIVATE_KEY_PATH"
+          # Diagnostic: first 8 chars only (safe — reveals framing, not key material).
+          # Expect "LS0tLS1C" (base64 of "-----B"). If you see "-----BEG", the raw PEM
+          # was pasted instead of the base64 blob.
+          echo "Secret starts with: $(printf '%s' "$SNOWFLAKE_PRIVATE_KEY_B64" | cut -c1-8)"
+          printf '%s' "$SNOWFLAKE_PRIVATE_KEY_B64" | tr -d '\r\n\t ' | base64 -d > "$SNOWFLAKE_PRIVATE_KEY_PATH"
           chmod 600 "$SNOWFLAKE_PRIVATE_KEY_PATH"
           # Sanity checks — prints only framing lines, never key material
           head -1 "$SNOWFLAKE_PRIVATE_KEY_PATH"
