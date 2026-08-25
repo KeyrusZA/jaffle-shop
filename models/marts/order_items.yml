@@ -16,7 +16,10 @@ models:
                 field: order_id
         entity:
           type: foreign
+          name: order
+
       - name: product_id
+
         entity:
           type: foreign
           name: product

@@ -1,0 +1,20 @@
+exposures:
+  - name: keyrus_digital_semantic_layer_workbook
+    label: Jaffle demo
+
+    type: dashboard
+    maturity: high
+    url: https://dub01.online.tableau.com/#/site/keyrusdigital/workbooks/4552545/views
+    description: >
+      Tableau workbook powered by the dbt Semantic Layer for customer, order,
+      and product analysis.
+    depends_on:
+      - metric('orders')
+      - metric('revenue')
+      - metric('customers')
+      - ref('orders')
+      - ref('order_items')
+      - ref('customers')
+      - ref('products')
+    owner:
+      name: Keyrus Digital
