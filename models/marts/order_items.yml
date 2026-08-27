@@ -69,7 +69,8 @@ models:
         label: Food Revenue
         type: simple
         agg: sum
-        expr: case when is_food_item then product_price else 0 end
+        expr: product_price
+        # expr: case when is_food_item then product_price else 0 end
       - name: drink_revenue
         description: The revenue from drinks in each order
         label: Drink Revenue
